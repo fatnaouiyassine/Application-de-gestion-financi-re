@@ -1,0 +1,191 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - SmartBank{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <div class="dashboard-header">
+        <h1>Welcome back, {{ current_user.username }}!</h1>
+        <p>Here's your financial overview</p>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="summary-grid">
+        <div class="summary-card total-balance">
+            <div class="card-icon">
+                <i class="fas fa-dollar-sign"></i>
+            </div>
+            <div class="card-content">
+                <h3>Total Balance</h3>
+                <p class="amount">{{ "%.2f"|format(total_balance) }} MAD</p>
+            </div>
+        </div>
+        
+        <div class="summary-card accounts-count">
+            <div class="card-icon">
+                <i class="fas fa-wallet"></i>
+            </div>
+            <div class="card-content">
+                <h3>Accounts</h3>
+                <p class="amount">{{ accounts|length }}</p>
+            </div>
+        </div>
+        
+        <div class="summary-card active-goals">
+            <div class="card-icon">
+                <i class="fas fa-bullseye"></i>
+            </div>
+            <div class="card-content">
+                <h3>Goals</h3>
+                <p class="amount">{{ goals|length }}</p>
+                <span style="display: inline-block; margin-top: 0.3em; padding: 2px 14px; font-size: 0.93rem; color: #297a4a; background: #eafaf2; border-radius: 999px; font-weight: 600; letter-spacing: 0.01em;">{{ active_goals_count }} active</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="dashboard-grid">
+        <!-- Accounts Section -->
+        <div class="dashboard-section">
+            <div class="section-header">
+                <h2><i class="fas fa-wallet"></i> Your Accounts</h2>
+                <a href="{{ url_for('accounts') }}" class="btn btn-secondary btn-small">
+                    <i class="fas fa-plus"></i> Add Account
+                </a>
+            </div>
+            
+            {% if accounts %}
+            <div class="accounts-list">
+                {% for account in accounts %}
+                <div class="account-item">
+                    <div class="account-info">
+                        <h4>{{ account.name }}</h4>
+                        <p class="account-type">{{ account.account_type|title }}</p>
+                    </div>
+                    <div class="account-balance">
+                        <p class="amount">{{ "%.2f"|format(account.balance) }} MAD</p>
+                        <a href="{{ url_for('transactions', account_id=account.id) }}" class="btn btn-outline btn-small">
+                            View Transactions
+                        </a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <i class="fas fa-wallet"></i>
+                <h3>No accounts yet</h3>
+                <p>Create your first account to start tracking your finances</p>
+                <a href="{{ url_for('accounts') }}" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Add Account
+                </a>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Goals Section -->
+        <div class="dashboard-section">
+            <div class="section-header">
+                <h2><i class="fas fa-bullseye"></i> Financial Goals</h2>
+                <a href="{{ url_for('goals') }}" class="btn btn-secondary btn-small">
+                    <i class="fas fa-plus"></i> Add Goal
+                </a>
+            </div>
+            
+            {% if goals %}
+            <div class="goals-list">
+                {% for goal in goals %}
+                <div class="goal-item">
+                    <div class="goal-info">
+                        <h4>{{ goal.name }}</h4>
+                        <p class="goal-category">{{ goal.category }}</p>
+                        {% if goal.deadline < today %}
+                        <div class="deadline-warning">
+                            <i class="fas fa-exclamation-triangle"></i> Deadline passed!
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="goal-progress">
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: {{ [goal.current_amount / goal.target_amount * 100, 100]|min }}%"></div>
+                        </div>
+                        <p class="goal-amounts">
+                            {{ "%.2f"|format(goal.current_amount) }} MAD / {{ "%.2f"|format(goal.target_amount) }} MAD
+                        </p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <i class="fas fa-bullseye"></i>
+                <h3>No goals set</h3>
+                <p>Set financial goals to stay motivated and track your progress</p>
+                <a href="{{ url_for('goals') }}" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Add Goal
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Export All Transactions Button (above recent transactions card, right-aligned) -->
+    <div style="display: flex; justify-content: flex-end; align-items: center; margin-bottom: 0.5rem;">
+        <a href="{{ url_for('export_all_transactions') }}" class="btn btn-primary btn-small export-all-btn">
+            <i class="fas fa-download"></i> Export All Transactions
+        </a>
+    </div>
+    <!-- Recent Transactions -->
+    <div class="dashboard-section full-width recent-transactions-card">
+        <div class="section-header">
+            <h2><i class="fas fa-history"></i> Recent Transactions</h2>
+        </div>
+        
+        {% if recent_transactions %}
+        <div class="transactions-table">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Description</th>
+                        <th>Category</th>
+                        <th>Amount</th>
+                        <th>Type</th>
+                        <th>Account</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for transaction in recent_transactions %}
+                    <tr>
+                        <td><span class="category-badge">{{ transaction.date.strftime('%Y-%m-%d') }}</span></td>
+                        <td><span class="category-badge">{{ transaction.description }}</span></td>
+                        <td><span class="category-badge">{{ transaction.category }}</span></td>
+                        <td class="amount {{ 'positive' if transaction.transaction_type == 'income' else 'negative' }}">
+                            {% if transaction.transaction_type == 'income' %}
+                                <i class="fas fa-arrow-up income-icon"></i>
+                                +{{ "%.2f"|format(transaction.amount) }} MAD
+                            {% else %}
+                                <i class="fas fa-arrow-down expense-icon"></i>
+                                -{{ "%.2f"|format(transaction.amount) }} MAD
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="type-badge {{ transaction.transaction_type }}">
+                                {{ transaction.transaction_type|title }}
+                            </span>
+                        </td>
+                        <td><span class="category-badge">{{ transaction.account.name }} ({{ transaction.account.account_type|title }})</span></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <i class="fas fa-history"></i>
+            <h3>No transactions yet</h3>
+            <p>Add some transactions to see your financial activity here</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %} 

@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+
+{% block title %}Transactions - {{ account.name }} - SmartBank{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header">
+        <div class="header-content">
+            <h1><i class="fas fa-list"></i> Transactions</h1>
+            <p>{{ account.name }} ({{ account.account_type|title }})</p>
+        </div>
+        <div class="header-balance">
+            <p class="balance-label">Current Balance</p>
+            <p class="balance-amount">{{ "%.2f"|format(account.balance) }} MAD</p>
+        </div>
+    </div>
+    <button id="back-btn" class="btn btn-secondary btn-small" style="align-items:center;gap:7px;margin-bottom:18px;" onclick="window.history.back()">
+        <i class="fas fa-arrow-left"></i> Back
+    </button>
+
+    <!-- Filter/Search Form -->
+    <form method="get" class="transaction-filters" id="filterForm" style="margin-bottom: 1rem; display: flex; gap: 1rem; flex-wrap: wrap; align-items: center;">
+        <input type="text" name="q" placeholder="Search description..." value="{{ request.args.get('q', '') }}" style="padding: 6px 10px; border-radius: 6px; border: 1px solid #ccc;">
+        <select name="category" style="padding: 6px 10px; border-radius: 6px; border: 1px solid #ccc;">
+            <option value="">All Categories</option>
+            {% for cat in categories %}
+                <option value="{{ cat }}" {% if request.args.get('category') == cat %}selected{% endif %}>{{ cat }}</option>
+            {% endfor %}
+                    </select>
+        <select name="type" style="padding: 6px 10px; border-radius: 6px; border: 1px solid #ccc;">
+            <option value="">All Types</option>
+            <option value="income" {% if request.args.get('type') == 'income' %}selected{% endif %}>Income</option>
+            <option value="expense" {% if request.args.get('type') == 'expense' %}selected{% endif %}>Expense</option>
+                    </select>
+        <button type="submit" class="btn btn-primary">Filter</button>
+    </form>
+    <!-- Sort and Export Row (aligned) -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+        <div>
+            <!-- Sort by Button with Dropdown -->
+            <div class="sort-bar" style="position: relative; display: flex; align-items: center;">
+                <form id="sortForm" method="get" style="display: flex; align-items: center;">
+                    <input type="hidden" name="q" value="{{ request.args.get('q', '') }}">
+                    <input type="hidden" name="category" value="{{ request.args.get('category', '') }}">
+                    <input type="hidden" name="type" value="{{ request.args.get('type', '') }}">
+                    <input type="hidden" id="sort_by_input" name="sort_by" value="{{ request.args.get('sort_by', 'date') }}">
+                    <input type="hidden" id="sort_dir_input" name="sort_dir" value="{{ request.args.get('sort_dir', 'desc') }}">
+                    <button type="button" class="btn sort-by-btn" id="sortByBtn" style="background: #fff; color: #297a4a; border: 2px solid #b6e2c6; border-radius: 24px; font-weight: 700; font-size: 1rem; padding: 6px 18px; display: flex; align-items: center; gap: 8px; box-shadow: 0 2px 8px 0 rgba(56, 142, 60, 0.10); min-width: 110px;">
+                        Sort by <span id="chevron" style="display: inline-block; transition: transform 0.2s; font-size: 1em;">&#9662;</span>
+                    </button>
+                    <div id="sortDropdown" class="sort-dropdown" style="display: none; position: absolute; top: 110%; left: 0; background: #fff; border: 1.5px solid #b6e2c6; border-radius: 14px; box-shadow: 0 4px 16px rgba(0,0,0,0.10); z-index: 10; min-width: 200px; max-width: 240px; overflow: hidden; padding: 2px 10px 2px 0;">
+                        <button type="button" class="dropdown-item" style="width: 100%; padding: 10px 28px; border: none; background: none; text-align: left; cursor: pointer; font-size: 1.08rem; font-weight: 500; display: flex; align-items: center; gap: 10px; transition: background 0.15s; color: #297a4a; white-space: nowrap;" onmouseover="this.style.background='#e6f9ec'" onmouseout="this.style.background='none'" onclick="setSort('date','asc')">
+                            {% if request.args.get('sort_by', 'date') == 'date' and request.args.get('sort_dir', 'desc') == 'asc' %}<span style="color: #7fc89a; font-size: 1.08em; min-width: 1.5em; text-align: left; display: inline-block;">&#10003;</span>{% else %}<span style="min-width: 1.5em; display: inline-block;"></span>{% endif %}
+                            <span style="text-align: left;">Date Ascending</span>
+                        </button>
+                        <button type="button" class="dropdown-item" style="width: 100%; padding: 10px 28px; border: none; background: none; text-align: left; cursor: pointer; font-size: 1.08rem; font-weight: 500; display: flex; align-items: center; gap: 10px; transition: background 0.15s; color: #297a4a; white-space: nowrap;" onmouseover="this.style.background='#e6f9ec'" onmouseout="this.style.background='none'" onclick="setSort('date','desc')">
+                            {% if request.args.get('sort_by', 'date') == 'date' and request.args.get('sort_dir', 'desc') == 'desc' %}<span style="color: #7fc89a; font-size: 1.08em; min-width: 1.5em; text-align: left; display: inline-block;">&#10003;</span>{% else %}<span style="min-width: 1.5em; display: inline-block;"></span>{% endif %}
+                            <span style="text-align: left;">Date Descending</span>
+                        </button>
+                        <div style="height:1px; background:#e0e0e0; margin: 2px 10px;"></div>
+                        <button type="button" class="dropdown-item" style="width: 100%; padding: 10px 28px; border: none; background: none; text-align: left; cursor: pointer; font-size: 1.08rem; font-weight: 500; display: flex; align-items: center; gap: 10px; transition: background 0.15s; color: #297a4a; white-space: nowrap;" onmouseover="this.style.background='#e6f9ec'" onmouseout="this.style.background='none'" onclick="setSort('amount','asc')">
+                            {% if request.args.get('sort_by') == 'amount' and request.args.get('sort_dir', 'desc') == 'asc' %}<span style="color: #7fc89a; font-size: 1.08em; min-width: 1.5em; text-align: left; display: inline-block;">&#10003;</span>{% else %}<span style="min-width: 1.5em; display: inline-block;"></span>{% endif %}
+                            <span style="text-align: left;">Amount Ascending</span>
+                        </button>
+                        <button type="button" class="dropdown-item" style="width: 100%; padding: 10px 28px; border: none; background: none; text-align: left; cursor: pointer; font-size: 1.08rem; font-weight: 500; display: flex; align-items: center; gap: 10px; transition: background 0.15s; color: #297a4a; white-space: nowrap;" onmouseover="this.style.background='#e6f9ec'" onmouseout="this.style.background='none'" onclick="setSort('amount','desc')">
+                            {% if request.args.get('sort_by') == 'amount' and request.args.get('sort_dir', 'desc') == 'desc' %}<span style="color: #7fc89a; font-size: 1.08em; min-width: 1.5em; text-align: left; display: inline-block;">&#10003;</span>{% else %}<span style="min-width: 1.5em; display: inline-block;"></span>{% endif %}
+                            <span style="text-align: left;">Amount Descending</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <div>
+            <a href="{{ url_for('export_transactions', account_id=account.id) }}" class="btn btn-primary btn-small export-csv-btn">
+                <i class="fas fa-file-csv"></i> Export CSV
+            </a>
+        </div>
+    </div>
+    <script>
+    document.getElementById('sortByBtn').onclick = function(e) {
+        e.preventDefault();
+        var dropdown = document.getElementById('sortDropdown');
+        var chevron = document.getElementById('chevron');
+        var isOpen = dropdown.style.display === 'block';
+        dropdown.style.display = isOpen ? 'none' : 'block';
+        if (chevron) chevron.style.transform = isOpen ? '' : 'rotate(180deg)';
+    };
+    function setSort(by, dir) {
+        document.getElementById('sort_by_input').value = by;
+        document.getElementById('sort_dir_input').value = dir;
+        document.getElementById('sortForm').submit();
+    }
+    window.onclick = function(event) {
+        var sortBtn = document.getElementById('sortByBtn');
+        var sortDropdown = document.getElementById('sortDropdown');
+        var chevron = document.getElementById('chevron');
+        if (sortDropdown && sortDropdown.style.display === 'block' && event.target !== sortBtn && !sortDropdown.contains(event.target)) {
+            sortDropdown.style.display = 'none';
+            if (chevron) chevron.style.transform = '';
+        }
+    };
+    </script>
+
+    <!-- Transactions List -->
+    <div class="transactions-section">
+        <h2 class="transaction-history-header">
+          <i class="fas fa-clock"></i> Transaction History
+        </h2>
+        
+        {% if transactions %}
+        <div class="transactions-table">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Description</th>
+                        <th>Category</th>
+                        <th>Amount</th>
+                        <th>Type</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for transaction in transactions %}
+                    <tr class="{% if loop.index0 % 2 == 0 %}even-row{% else %}odd-row{% endif %}">
+                        <td><span class="category-badge">{{ transaction.date.strftime('%Y-%m-%d %H:%M') }}</span></td>
+                        <td><span class="category-badge">{{ transaction.description }}</span></td>
+                        <td><span class="category-badge">{{ transaction.category }}</span></td>
+                        <td class="amount {{ 'positive' if transaction.transaction_type == 'income' else 'negative' }}">
+                            {% if transaction.transaction_type == 'income' %}
+                                <span class="arrow up">↑</span>
+                                +{{ "%.2f"|format(transaction.amount) }} MAD
+                            {% else %}
+                                <span class="arrow down">↓</span>
+                                -{{ "%.2f"|format(transaction.amount) }} MAD
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="type-badge {{ transaction.transaction_type }}">
+                                {{ transaction.transaction_type|title }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <i class="fas fa-list"></i>
+            <h3>No transactions yet</h3>
+            <p>Add your first transaction to start tracking your financial activity</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %} 

@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+{% block title %}Financial Quiz - {{ topic }}{% endblock %}
+{% block content %}
+<div class="quiz-section" style="max-width: 700px; margin: 0 auto; padding: 32px 0;">
+    <h1 style="font-size: 2rem; font-weight: 800; color: #297a4a; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 12px;"><i class="fas fa-question-circle"></i> {{ topic }} Quiz</h1>
+    <button id="back-btn" class="btn btn-secondary btn-small" style="align-items:center;gap:7px;margin-bottom:18px;" onclick="window.history.back()">
+        <i class="fas fa-arrow-left"></i> Back
+    </button>
+    <form method="post">
+        {% for q in questions %}
+        {% set qidx = loop.index0 %}
+        <div class="quiz-question" style="background: #eafaf2; border-radius: 14px; box-shadow: 0 2px 8px rgba(80, 112, 80, 0.06); padding: 20px 22px; margin-bottom: 1.2rem; border: 1px solid #d2f2e3;">
+            <div style="font-size: 1.13rem; font-weight: 600; color: #222b45; margin-bottom: 0.7rem;">Q{{ loop.index }}. {{ q.question }}</div>
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+                {% for opt in q.options %}
+                <label style="display: flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #297a4a;">
+                    <input type="radio" name="q{{ qidx }}" value="{{ loop.index0 }}" {% if user_answers and user_answers[qidx] == loop.index0 %}checked{% endif %} required>
+                    {{ opt }}
+                </label>
+                {% endfor %}
+            </div>
+            {% if score is not none %}
+                <div style="margin-top: 0.7rem; font-size: 0.98rem;">
+                    <span style="color: {% if user_answers[qidx] == q.answer %}#2ecc71{% else %}#e74c3c{% endif %}; font-weight: 600;">
+                        {% if user_answers[qidx] == q.answer %}Correct!{% else %}Incorrect.{% endif %}
+                    </span>
+                    <span style="color: #297a4a; margin-left: 10px;">{{ explanations[qidx] }}</span>
+                </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+        {% if score is none %}
+        <div style="margin-bottom: 1.2rem;">
+            <div style="height: 12px; background: #e6f9ec; border-radius: 8px; overflow: hidden;">
+                <div style="width: 0%; height: 100%; background: linear-gradient(90deg, #388e3c 0%, #a8e063 100%); transition: width 0.3s;" id="progress-bar"></div>
+            </div>
+        </div>
+        <button type="submit" class="btn btn-primary" style="margin-top: 12px;">Submit Quiz</button>
+        {% endif %}
+    </form>
+    {% if score is not none %}
+    <div class="quiz-result" style="margin-top: 2rem; background: #e6f9ec; border-radius: 14px; padding: 18px 24px; border: 1.5px solid #b6e2c6; text-align: center;">
+        <h2 style="color: #297a4a; font-size: 1.3rem; font-weight: 700;">Your Score: {{ score }} / {{ questions|length }}</h2>
+        {% if score == questions|length %}
+            <p style="color: #2ecc71; font-weight: 600;">Excellent! You got all questions right!</p>
+        {% elif score >= questions|length - 1 %}
+            <p style="color: #519872; font-weight: 600;">Great job! Just one mistake.</p>
+        {% elif score >= questions|length // 2 %}
+            <p style="color: #f39c12; font-weight: 600;">Good effort! Review the tips to improve even more.</p>
+        {% else %}
+            <p style="color: #e74c3c; font-weight: 600;">Keep learning! Check out the educational section for help.</p>
+        {% endif %}
+        <a href="{{ url_for('quiz_select') }}" class="btn btn-secondary" style="margin-top: 1.2rem;">Back to Quiz Topics</a>
+    </div>
+    {% endif %}
+</div>
+{% if score is none %}
+<script>
+// Simple progress bar (shows 0% until submit, can be enhanced for per-question quizzes)
+document.getElementById('progress-bar').style.width = '100%';
+</script>
+{% endif %}
+{% endblock %} 

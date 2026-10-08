@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+
+{% block title %}Analytics - SmartBank{% endblock %}
+
+{% block extra_css %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header">
+        <h1><i class="fas fa-chart-line"></i> Financial Analytics</h1>
+        <p>Insights into your spending patterns and financial health</p>
+    </div>
+
+    <div class="analytics-grid">
+        <!-- Spending by Category -->
+        <div class="analytics-card">
+            <h2>Spending by Category</h2>
+            {% if spending_by_category %}
+            <div class="chart-container">
+                <canvas id="spendingChart"></canvas>
+            </div>
+            <div class="category-breakdown">
+                {% for category, amount in spending_by_category.items() %}
+                <div class="category-item">
+                    <span class="category-name">{{ category }}</span>
+                    <span class="category-amount">{{ "%.2f"|format(amount) }} MAD</span>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <i class="fas fa-chart-pie"></i>
+                <h3>No spending data</h3>
+                <p>Add some expenses to see your spending breakdown</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Income by Category -->
+        <div class="analytics-card">
+            <h2>Income by Category</h2>
+            {% if income_by_category %}
+            <div class="chart-container">
+                <canvas id="incomeChart"></canvas>
+            </div>
+            <div class="category-breakdown">
+                {% for category, amount in income_by_category.items() %}
+                <div class="category-item">
+                    <span class="category-name">{{ category }}</span>
+                    <span class="category-amount positive">{{ "%.2f"|format(amount) }} MAD</span>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <i class="fas fa-chart-pie"></i>
+                <h3>No income data</h3>
+                <p>Add some income transactions to see your income breakdown</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Summary Statistics -->
+    <div class="analytics-summary">
+        <div class="summary-card">
+            <h3>Total Spending</h3>
+            <p class="summary-amount negative">
+                {{ "%.2f"|format(spending_by_category.values()|sum) }} MAD
+            </p>
+        </div>
+        <div class="summary-card">
+            <h3>Total Income</h3>
+            <p class="summary-amount positive">
+                {{ "%.2f"|format(income_by_category.values()|sum) }} MAD
+            </p>
+        </div>
+        <div class="summary-card">
+            <h3>Net Savings</h3>
+            <p class="summary-amount {{ 'positive' if (income_by_category.values()|sum) > (spending_by_category.values()|sum) else 'negative' }}">
+                {{ "%.2f"|format((income_by_category.values()|sum) - (spending_by_category.values()|sum)) }} MAD
+            </p>
+        </div>
+    </div>
+</div>
+
+<script>
+// Spending Chart
+{% if spending_by_category %}
+const spendingCtx = document.getElementById('spendingChart').getContext('2d');
+const spendingChart = new Chart(spendingCtx, {
+    type: 'doughnut',
+    data: {
+        labels: {{ spending_by_category.keys()|list|tojson }},
+        datasets: [{
+            data: {{ spending_by_category.values()|list|tojson }},
+            backgroundColor: [
+                '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7',
+                '#DDA0DD', '#98D8C8', '#F7DC6F', '#BB8FCE', '#85C1E9'
+            ]
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                position: 'bottom'
+            }
+        }
+    }
+});
+{% endif %}
+
+// Income Chart
+{% if income_by_category %}
+const incomeCtx = document.getElementById('incomeChart').getContext('2d');
+const incomeChart = new Chart(incomeCtx, {
+    type: 'doughnut',
+    data: {
+        labels: {{ income_by_category.keys()|list|tojson }},
+        datasets: [{
+            data: {{ income_by_category.values()|list|tojson }},
+            backgroundColor: [
+                '#2ECC71', '#3498DB', '#9B59B6', '#E67E22', '#1ABC9C',
+                '#F39C12', '#E74C3C', '#34495E', '#16A085', '#8E44AD'
+            ]
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                position: 'bottom'
+            }
+        }
+    }
+});
+{% endif %}
+</script>
+{% endblock %} 

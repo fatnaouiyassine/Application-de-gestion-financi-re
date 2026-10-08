@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% block title %}SmartBank - Your Financial Companion{% endblock %}
+
+{% block content %}
+<div class="hero-section">
+    <div class="hero-content">
+        <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo" style="max-width: 120px; width: 100%; height: auto; display: block; margin: 0 auto 24px auto;">
+        <h1 class="hero-title">
+            <span class="gradient-text">SmartBank</span>
+            <br>Your Financial Companion
+        </h1>
+        <p class="hero-subtitle">
+            Track your finances, set savings goals, and achieve financial freedom with our intelligent banking platform.
+        </p>
+        <div class="hero-buttons">
+            <a href="{{ url_for('register') }}" class="btn btn-primary">
+                <i class="fas fa-rocket"></i> Get Started
+            </a>
+            <a href="{{ url_for('login') }}" class="btn btn-secondary">
+                <i class="fas fa-sign-in-alt"></i> Login
+            </a>
+        </div>
+    </div>
+</div>
+
+<section class="features-section">
+    <h2 class="section-title">why Choose SmartBank?</h2>
+    <div class="features-grid">
+        <div class="feature-card">
+            <div class="feature-icon">
+                <i class="fas fa-wallet"></i>
+            </div>
+            <h3>Multi-Account Management</h3>
+            <p>Manage all your accounts in one place - savings, checking, and credit cards with real-time balance updates.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">
+                <i class="fas fa-chart-pie"></i>
+            </div>
+            <h3>Smart Analytics</h3>
+            <p>Visualize your spending patterns with interactive charts and get insights to optimize your budget.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">
+                <i class="fas fa-bullseye"></i>
+            </div>
+            <h3>Goal Setting</h3>
+            <p>Set financial goals and track your progress with visual progress bars and milestone celebrations.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">
+                <i class="fas fa-book-open"></i>
+            </div>
+            <h3>Learning Hub</h3>
+            <p>Boost your financial literacy with interactive lessons, actionable tips, and engaging quizzes—all in one place to help you master your money.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">
+                <i class="fas fa-tachometer-alt"></i>
+            </div>
+            <h3>Personalized Dashboard</h3>
+            <p>See all your accounts, goals, and recent activity at a glance—your dashboard is tailored to help you stay on top of your finances every day.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">
+                <i class="fas fa-lightbulb"></i>
+            </div>
+            <h3>Smart Insights</h3>
+            <p>Get personalized recommendations to save money and improve your financial health.</p>
+        </div>
+    </div>
+</section>
+
+<section class="cta-section">
+    <div class="cta-content">
+        <h2>Ready to Take Control of Your Finances?</h2>
+        <p>Join thousands of users who are already achieving their financial goals with SmartBank.</p>
+        <a href="{{ url_for('register') }}" class="btn btn-primary btn-large">
+            <i class="fas fa-rocket"></i> Start Your Journey
+        </a>
+    </div>
+</section>
+{% endblock %} 

@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% block title %}Select a Quiz Topic{% endblock %}
+{% block content %}
+<div class="quiz-select-section" style="max-width: 700px; margin: 0 auto; padding: 32px 0;">
+    <h1 style="font-size: 2rem; font-weight: 800; color: #297a4a; margin-bottom: 2rem; display: flex; align-items: center; gap: 12px;"><i class="fas fa-question-circle"></i> Financial Quizzes</h1>
+    <div class="quiz-topic-list" style="display: flex; flex-wrap: wrap; gap: 22px;">
+        {% for topic in topics %}
+        <a href="{{ url_for('quiz', topic=topic) }}" class="quiz-topic-card" style="background: #eafaf2; border-radius: 16px; box-shadow: 0 2px 12px rgba(80, 112, 80, 0.07); padding: 32px 38px; min-width: 220px; flex: 1 1 220px; border: 1px solid #d2f2e3; text-decoration: none; color: #297a4a; font-size: 1.18rem; font-weight: 700; display: flex; align-items: center; gap: 12px; transition: box-shadow 0.18s, background 0.18s;}">
+            <i class="fas fa-lightbulb"></i> {{ topic }}
+        </a>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %} 
